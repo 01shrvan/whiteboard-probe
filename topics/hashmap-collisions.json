@@ -1,0 +1,23 @@
+{
+  "topic": "Hash map collisions",
+  "form": "structure",
+  "summary": "What happens when two keys want the same slot.",
+  "slots": 8,
+  "nodes": [
+    { "id": "arr", "label": "buckets", "kind": "array" },
+    { "id": "cat", "label": "\"cat\" → 3", "kind": "entry", "slot": 3 },
+    { "id": "dog", "label": "\"dog\" → 7", "kind": "entry", "slot": 7 },
+    { "id": "bat", "label": "\"bat\" → 3", "kind": "entry", "slot": 3, "chained": true }
+  ],
+  "edges": [
+    { "id": "chain", "from": "cat", "to": "bat", "label": "next" }
+  ],
+  "steps": [
+    { "say": "A hash map is an array. The whole trick is turning a key into an index.", "add": ["arr"] },
+    { "say": "hash(\"cat\") lands on 3. Store it there. Lookup is now one jump, not a scan.", "add": ["cat"] },
+    { "say": "hash(\"dog\") lands on 7. Also fine. This is the case everyone pictures.", "add": ["dog"] },
+    { "say": "hash(\"bat\") also lands on 3. The slot is taken.", "add": ["bat"], "emphasise": ["bat"] },
+    { "say": "Chaining: the slot holds a list, not a value. Both keys live at 3 and lookup walks the chain.", "add": ["chain"] },
+    { "say": "The thing that actually matters is not the collision, it is the ratio. Once entries exceed about 75% of slots, chains get long and O(1) quietly becomes O(n) — so the map resizes and every key is rehashed to a new index.", "emphasise": ["arr"], "aside": "Collisions are normal. Long chains are the bug." }
+  ]
+}

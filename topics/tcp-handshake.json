@@ -1,0 +1,22 @@
+{
+  "topic": "TCP three-way handshake",
+  "form": "sequence",
+  "summary": "Why opening a connection takes three messages and not two.",
+  "lanes": ["Client", "Server"],
+  "nodes": [
+    { "id": "c", "label": "Client", "kind": "actor", "lane": 0 },
+    { "id": "s", "label": "Server", "kind": "actor", "lane": 1 }
+  ],
+  "edges": [
+    { "id": "syn", "from": "c", "to": "s", "label": "SYN  seq=x" },
+    { "id": "synack", "from": "s", "to": "c", "label": "SYN-ACK  seq=y, ack=x+1" },
+    { "id": "ack", "from": "c", "to": "s", "label": "ACK  ack=y+1" }
+  ],
+  "steps": [
+    { "say": "Two machines that have never spoken. Neither knows where the other will start counting bytes.", "add": ["c", "s"] },
+    { "say": "The client picks a starting sequence number x and sends it. This is a proposal, not a connection.", "add": ["syn"] },
+    { "say": "The server acknowledges x and proposes its own starting number y. One message doing two jobs.", "add": ["synack"] },
+    { "say": "The client acknowledges y. Now both sides know their own number arrived.", "add": ["ack"] },
+    { "say": "Here is the part people get wrong: the third message is not a formality. Without it the server has no proof its own sequence number was received — so an old delayed SYN could open a connection nobody asked for.", "emphasise": ["ack"], "aside": "Two messages would leave the server guessing." }
+  ]
+}

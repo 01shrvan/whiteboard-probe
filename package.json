@@ -1,0 +1,13 @@
+{
+  "name": "whiteboard-probe",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "serve -l 4312 ."
+  },
+  "dependencies": {
+    "dagre": "^0.8.5",
+    "roughjs": "^4.6.6"
+  }
+}

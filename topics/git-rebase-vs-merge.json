@@ -1,0 +1,36 @@
+{
+  "topic": "git rebase vs merge",
+  "form": "comparison",
+  "summary": "Same result in the working tree, different history, different consequences.",
+  "columns": ["merge", "rebase"],
+  "nodes": [
+    { "id": "m0", "label": "A", "kind": "commit", "col": 0, "row": 0, "track": 0 },
+    { "id": "m1", "label": "B", "kind": "commit", "col": 0, "row": 1, "track": 0 },
+    { "id": "m2", "label": "C", "kind": "commit", "col": 0, "row": 2, "track": 1 },
+    { "id": "m3", "label": "D", "kind": "commit", "col": 0, "row": 2, "track": 0 },
+    { "id": "mm", "label": "M", "kind": "merge", "col": 0, "row": 3, "track": 0 },
+    { "id": "r0", "label": "A", "kind": "commit", "col": 1, "row": 0, "track": 0 },
+    { "id": "r1", "label": "B", "kind": "commit", "col": 1, "row": 1, "track": 0 },
+    { "id": "r2", "label": "C", "kind": "commit", "col": 1, "row": 2, "track": 1 },
+    { "id": "r3", "label": "D", "kind": "commit", "col": 1, "row": 2, "track": 0 },
+    { "id": "r2p", "label": "C'", "kind": "rewritten", "col": 1, "row": 3, "track": 0 }
+  ],
+  "edges": [
+    { "id": "me1", "from": "m0", "to": "m1" },
+    { "id": "me2", "from": "m1", "to": "m2" },
+    { "id": "me3", "from": "m1", "to": "m3" },
+    { "id": "me4", "from": "m3", "to": "mm" },
+    { "id": "me5", "from": "m2", "to": "mm" },
+    { "id": "re1", "from": "r0", "to": "r1" },
+    { "id": "re2", "from": "r1", "to": "r2" },
+    { "id": "re3", "from": "r1", "to": "r3" },
+    { "id": "re4", "from": "r3", "to": "r2p" }
+  ],
+  "steps": [
+    { "say": "Both stories start the same way. You branched off B, someone else pushed D to main.", "add": ["m0", "m1", "m2", "m3", "me1", "me2", "me3", "r0", "r1", "r2", "r3", "re1", "re2", "re3"] },
+    { "say": "Merge makes a new commit with two parents. Your C is untouched — it keeps its hash, its author date, everything.", "add": ["mm", "me4", "me5"] },
+    { "say": "Rebase does something different. It takes the change C introduced and replays it on top of D.", "add": ["r2p", "re4"], "emphasise": ["r2p"] },
+    { "say": "C' is not C. Same diff, new parent, new hash — a different commit wearing the same message. The original C is still in the reflog, unreferenced, until it gets collected.", "emphasise": ["r2", "r2p"], "aside": "Rebase does not move commits. It copies them." },
+    { "say": "Which is why the rule is about audience, not aesthetics: rebase your own unpushed work freely, because nobody else has those hashes. Rebase a shared branch and everyone else's history now disagrees with yours.", "emphasise": ["mm", "r2p"] }
+  ]
+}

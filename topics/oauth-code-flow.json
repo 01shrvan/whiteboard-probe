@@ -1,0 +1,31 @@
+{
+  "topic": "OAuth authorization code flow",
+  "form": "sequence",
+  "summary": "Why there is a code step instead of just handing over a token.",
+  "lanes": ["User", "Your app", "Auth server", "API"],
+  "nodes": [
+    { "id": "u", "label": "User", "kind": "actor", "lane": 0 },
+    { "id": "a", "label": "Your app", "kind": "actor", "lane": 1 },
+    { "id": "z", "label": "Auth server", "kind": "actor", "lane": 2 },
+    { "id": "api", "label": "API", "kind": "actor", "lane": 3 }
+  ],
+  "edges": [
+    { "id": "click", "from": "u", "to": "a", "label": "log in with Google" },
+    { "id": "redirect", "from": "a", "to": "z", "label": "redirect  client_id, scope" },
+    { "id": "auth", "from": "u", "to": "z", "label": "signs in, approves" },
+    { "id": "code", "from": "z", "to": "a", "label": "redirect back  ?code=abc" },
+    { "id": "exchange", "from": "a", "to": "z", "label": "code + client_secret", "kind": "back" },
+    { "id": "token", "from": "z", "to": "a", "label": "access_token", "kind": "back" },
+    { "id": "call", "from": "a", "to": "api", "label": "request + token" }
+  ],
+  "steps": [
+    { "say": "Four parties. The one to watch is the browser, because everything it touches is visible to the user and to anything else on the page.", "add": ["u", "a", "z", "api"] },
+    { "say": "The user asks your app to log them in.", "add": ["click"] },
+    { "say": "Your app does not check the password. It redirects to the auth server, carrying only public information.", "add": ["redirect"] },
+    { "say": "The user authenticates directly with the auth server. Your app never sees the credentials.", "add": ["auth"] },
+    { "say": "The auth server redirects back with a short-lived code. This code is useless on its own.", "add": ["code"] },
+    { "say": "Your server swaps the code for a token, over a back channel, using a secret the browser never has.", "add": ["exchange", "token"] },
+    { "say": "Now the token can call the API.", "add": ["call"] },
+    { "say": "So why the code at all? Because the redirect goes through the browser. If the token travelled that path it would land in history, logs and referrers. The code is the part that is safe to lose.", "emphasise": ["code", "exchange"], "aside": "The token never touches the browser." }
+  ]
+}

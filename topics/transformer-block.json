@@ -1,0 +1,34 @@
+{
+  "topic": "A transformer block",
+  "form": "dataflow",
+  "summary": "What one block does, and why the two additions matter more than they look.",
+  "nodes": [
+    { "id": "in", "label": "token embeddings", "kind": "io" },
+    { "id": "ln1", "label": "layer norm", "kind": "op" },
+    { "id": "attn", "label": "multi-head\nself-attention", "kind": "main" },
+    { "id": "add1", "label": "+", "kind": "add" },
+    { "id": "ln2", "label": "layer norm", "kind": "op" },
+    { "id": "ff", "label": "feed forward\n(4x wide)", "kind": "main" },
+    { "id": "add2", "label": "+", "kind": "add" },
+    { "id": "out", "label": "to next block", "kind": "io" }
+  ],
+  "edges": [
+    { "id": "e1", "from": "in", "to": "ln1" },
+    { "id": "e2", "from": "ln1", "to": "attn" },
+    { "id": "e3", "from": "attn", "to": "add1" },
+    { "id": "skip1", "from": "in", "to": "add1", "label": "residual", "kind": "skip" },
+    { "id": "e4", "from": "add1", "to": "ln2" },
+    { "id": "e5", "from": "ln2", "to": "ff" },
+    { "id": "e6", "from": "ff", "to": "add2" },
+    { "id": "skip2", "from": "add1", "to": "add2", "label": "residual", "kind": "skip" },
+    { "id": "e7", "from": "add2", "to": "out" }
+  ],
+  "steps": [
+    { "say": "One block, one job: let every token look at every other token, then think about what it saw.", "add": ["in", "out"] },
+    { "say": "Attention is the looking. Each token builds a weighted view of the whole sequence.", "add": ["ln1", "attn", "e1", "e2"] },
+    { "say": "Feed forward is the thinking. It runs per token, no mixing, and it is where most of the parameters live.", "add": ["add1", "ln2", "ff", "e3", "e4", "e5"] },
+    { "say": "Stack the two and you have the block.", "add": ["add2", "e6", "e7"] },
+    { "say": "Now the parts that look like plumbing. These two arrows skip past the layers entirely.", "add": ["skip1", "skip2"], "emphasise": ["skip1", "skip2"] },
+    { "say": "They are the reason depth works at all. Each sub-layer only has to learn a correction to what it received, and the gradient has a path back to the input that never passes through a weight matrix. Remove them and a 96-layer model does not train.", "emphasise": ["skip1", "skip2"], "aside": "The residual is not plumbing. It is the load-bearing wall." }
+  ]
+}

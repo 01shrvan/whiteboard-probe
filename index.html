@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Whiteboard Probe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <h1>Nobody gives you the build order.</h1>
+    <p class="sub">Every AI diagram tool hands you a finished picture. A teacher at a whiteboard draws one piece, says a sentence, adds the next — then circles something and adds an arrow that changes what you thought. These five were generated in one pass each: the model chose the form, the nodes, and the order. It never touched a coordinate.</p>
+    <p class="sub"><strong>Judge three things.</strong> Is the form right for the concept? Does the order teach, or is it just topological? And is there a step that changes what you thought?</p>
+  </header>
+  <div id="topics"></div>
+</div>
+
+<script src="node_modules/dagre/dist/dagre.min.js"></script>
+<script src="node_modules/roughjs/bundled/rough.js"></script>
+<script src="lib/layout.js"></script>
+<script src="lib/render.js"></script>
+<script src="lib/player.js"></script>
+<script>
+const FILES = [
+  "tcp-handshake",
+  "oauth-code-flow",
+  "hashmap-collisions",
+  "git-rebase-vs-merge",
+  "transformer-block",
+];
+
+(async () => {
+  const host = document.getElementById("topics");
+  for (const f of FILES) {
+    const spec = await fetch(`topics/${f}.json`).then((r) => r.json());
+    const section = document.createElement("section");
+    section.className = "topic";
+    section.innerHTML = `
+      <div class="topic__head">
+        <span class="topic__name">${spec.topic}</span>
+        <span class="form-tag">${spec.form}</span>
+      </div>
+      <p class="topic__sum">${spec.summary}</p>
+      <div class="mount"></div>`;
+    host.appendChild(section);
+    try {
+      buildBoard(spec, section.querySelector(".mount"));
+    } catch (err) {
+      section.querySelector(".mount").textContent = "layout failed: " + err.message;
+    }
+  }
+})();
+</script>
+</body>
+</html>

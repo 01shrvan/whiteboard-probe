@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { font-family: system-ui, sans-serif; }
+  .study { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+  .study h1 { margin-bottom: 8px; }
+  .study__meta { color: #666; margin-bottom: 28px; }
+  .panel { border: 1px solid #ddd; border-radius: 12px; padding: 24px; margin: 18px 0; background: #fff; }
+  .panel h2 { margin-top: 0; }
+  .question { margin: 24px 0; }
+  .question label { display: block; font-weight: 650; margin-bottom: 8px; }
+  textarea { width: 100%; min-height: 110px; box-sizing: border-box; padding: 12px; font: inherit; border: 1px solid #bbb; border-radius: 8px; resize: vertical; }
+  input[type=text] { width: 100%; box-sizing: border-box; padding: 12px; font: inherit; border: 1px solid #bbb; border-radius: 8px; }
+  button { font: inherit; cursor: pointer; }
+  .primary { border: 0; border-radius: 8px; padding: 12px 18px; background: #111; color: white; }
+  .secondary { border: 1px solid #bbb; border-radius: 8px; padding: 10px 16px; background: white; }
+  .hidden { display: none !important; }
+  .progress { font-size: 14px; color: #666; margin-bottom: 12px; }
+  .study-board { margin: 20px 0; }
+  .study-board .board__scroll { max-height: 620px; overflow: auto; }
+  .study-board .transport { display: none; }
+  .all-text p { line-height: 1.55; }
+  .prose { line-height: 1.65; max-width: 760px; }
+  .consent { color: #555; font-size: 14px; line-height: 1.5; }
+  .notice { padding: 12px 14px; background: #f4f4f4; border-radius: 8px; margin: 14px 0; }
+  .error { color: #a00; margin-top: 10px; }
+</style>
+</head>
+<body>
+<main class="study">
+  <h1>whiteboard learning study</h1>
+  <p class="study__meta">about 8–12 minutes · two technical concepts · one short test</p>
+
+  <section id="start" class="panel">
+    <h2>before you start</h2>
+    <p>you will be shown two short explanations of technical concepts. afterwards you will answer questions about what would happen in a changed situation.</p>
+    <p>please do the explanations in order and do not look up the answers. the study is comparing explanation formats, not your existing technical knowledge.</p>
+    <p class="consent">your participant id and responses are recorded in this browser so the study can export them later. no name or email is requested.</p>
+    <label for="pid">participant id</label>
+    <input id="pid" type="text" autocomplete="off" placeholder="e.g. p01">
+    <p id="start-error" class="error hidden"></p>
+    <button id="start-btn" class="primary" style="margin-top:14px">begin</button>
+  </section>
+
+  <section id="study" class="hidden">
+    <div class="progress" id="progress"></div>
+    <div id="stimulus" class="panel"></div>
+    <div id="questions" class="panel hidden"></div>
+    <button id="continue-btn" class="primary hidden">continue</button>
+  </section>
+
+  <section id="done" class="panel hidden">
+    <h2>done</h2>
+    <p>thank you. your responses are saved locally for the study operator.</p>
+    <button id="download-btn" class="secondary">download response</button>
+  </section>
+
+  <section id="operator" class="panel hidden">
+    <h2>operator</h2>
+    <p>this is for the study operator only. export the accumulated responses from this browser after participants finish.</p>
+    <button id="export-btn" class="secondary">export all responses</button>
+  </section>
+</main>
+
+<script src="../node_modules/dagre/dist/dagre.min.js"></script>
+<script src="../node_modules/roughjs/bundled/rough.js"></script>
+<script src="../lib/layout.js"></script>
+<script src="../lib/render.js"></script>
+<script src="../lib/player.js"></script>
+<script>
+const CONCEPTS = [
+  { id: "concept-1", file: "../topics/tcp-handshake.json" },
+  { id: "concept-2", file: "../topics/git-rebase-vs-merge.json" },
+];
+
+let participantId = "";
+let assignment = null;
+let conceptIndex = 0;
+let currentConcept = null;
+let startedAt = null;
+let stimulusShownAt = null;
+let answers = [];
+
+function hash(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function makeAssignment(id) {
+  const h = hash(id.toLowerCase());
+  const arms = ["A", "B", "C"];
+  return {
+    arm: arms[h % 3],
+    conceptOrder: (h % 2 === 0) ? [0, 1] : [1, 0],
+    code: h.toString(16)
+  };
+}
+
+async function loadConcept(i) {
+  return fetch(CONCEPTS[i].file).then(r => r.json());
+}
+
+function proseFor(spec) {
+  return spec.steps.map(s => s.say).join(" ");
+}
+
+function renderStatic(spec, stepped) {
+  const host = document.createElement("div");
+  host.className = "study-board";
+  host.innerHTML = '<div class="board"><div class="board__scroll"><canvas></canvas></div></div>';
+  const canvas = host.querySelector("canvas");
+  const plan = layout(spec);
+  const visible = new Set(plan.items.filter(i => i.kind === "column-title").map(i => i.id));
+  if (stepped) {
+    // only the first state is rendered initially; participants advance with the fixed step button
+    (spec.steps[0].add || []).forEach(id => visible.add(id));
+  } else {
+    for (const step of spec.steps) (step.add || []).forEach(id => visible.add(id));
+  }
+  render(canvas, plan, visible, new Set());
+  return host;
+}
+
+function renderArm(spec) {
+  const host = document.createElement("div");
+  if (assignment.arm === "A") {
+    host.innerHTML = '<h2>' + spec.topic + '</h2><div class="prose"></div>';
+    host.querySelector(".prose").textContent = proseFor(spec);
+    return host;
+  }
+  if (assignment.arm === "B") {
+    host.innerHTML = '<h2>' + spec.topic + '</h2><div class="all-text"></div>';
+    host.querySelector(".all-text").innerHTML = spec.steps.map((s, i) => `<p><strong>step ${i + 1}</strong> — ${escapeHtml(s.say)}</p>`).join("");
+    host.prepend(renderStatic(spec, false));
+    return host;
+  }
+  host.innerHTML = '<h2>' + spec.topic + '</h2>';
+  const board = document.createElement("div");
+  board.className = "study-board";
+  board.innerHTML = `
+    <div class="board"><div class="board__scroll"><canvas></canvas></div></div>
+    <p class="say__text"></p><p class="say__aside"></p>
+    <button class="secondary" id="step-btn">next step</button>
+    <span id="step-count" style="margin-left:10px;color:#666"></span>`;
+  host.appendChild(board);
+  const canvas = board.querySelector("canvas");
+  const plan = layout(spec);
+  let at = 0;
+  const paint = () => {
+    const visible = new Set(plan.items.filter(i => i.kind === "column-title").map(i => i.id));
+    for (let i = 0; i <= at; i++) (spec.steps[i].add || []).forEach(id => visible.add(id));
+    render(canvas, plan, visible, new Set(spec.steps[at].emphasise || []));
+    board.querySelector(".say__text").textContent = spec.steps[at].say;
+    board.querySelector(".say__aside").textContent = spec.steps[at].aside || "";
+    board.querySelector("#step-count").textContent = `${at + 1} / ${spec.steps.length}`;
+    board.querySelector("#step-btn").textContent = at === spec.steps.length - 1 ? "continue" : "next step";
+  };
+  board.querySelector("#step-btn").onclick = () => {
+    if (at < spec.steps.length - 1) { at++; paint(); }
+    else showQuestions();
+  };
+  paint();
+  return host;
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+}
+
+function showQuestions() {
+  const q = document.getElementById("questions");
+  q.classList.remove("hidden");
+  q.innerHTML = `<h2>your understanding</h2>
+    <p>answer in your own words. the important thing is what you think would happen, not whether you remember the wording.</p>
+    ${currentConcept.transfer.map((text, i) => `<div class="question"><label for="t${i}">${escapeHtml(text)}</label><textarea id="t${i}" data-kind="transfer"></textarea></div>`).join("")}
+    <details><summary>optional recall question</summary>
+      ${currentConcept.recall.map((text, i) => `<div class="question"><label for="r${i}">${escapeHtml(text)}</label><textarea id="r${i}" data-kind="recall"></textarea></div>`).join("")}
+    </details>`;
+  document.getElementById("continue-btn").classList.remove("hidden");
+  stimulusShownAt = null;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function beginConcept() {
+  const i = assignment.conceptOrder[conceptIndex];
+  loadConcept(i).then(spec => {
+    currentConcept = { ...spec, ...window.questionsData.find(x => x.id === CONCEPTS[i].id) };
+    document.getElementById("progress").textContent = `concept ${conceptIndex + 1} of 2`;
+    const stimulus = document.getElementById("stimulus");
+    stimulus.classList.remove("hidden");
+    document.getElementById("questions").classList.add("hidden");
+    document.getElementById("continue-btn").classList.add("hidden");
+    stimulus.innerHTML = "";
+    stimulus.appendChild(renderArm(spec));
+    stimulusShownAt = performance.now();
+  });
+}
+
+document.getElementById("start-btn").onclick = async () => {
+  const id = document.getElementById("pid").value.trim();
+  if (!id) {
+    const e = document.getElementById("start-error"); e.textContent = "enter a participant id"; e.classList.remove("hidden"); return;
+  }
+  participantId = id;
+  assignment = makeAssignment(id);
+  startedAt = new Date().toISOString();
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("study").classList.remove("hidden");
+  window.questionsData = await fetch("questions.json").then(r => r.json()).then(x => x.concepts);
+  beginConcept();
+};
+
+document.getElementById("continue-btn").onclick = () => {
+  const fields = [...document.querySelectorAll("#questions textarea")];
+  const transfer = fields.filter(x => x.dataset.kind === "transfer").map(x => x.value.trim());
+  const recall = fields.filter(x => x.dataset.kind === "recall").map(x => x.value.trim());
+  if (transfer.some(x => !x)) { alert("please answer the transfer questions before continuing"); return; }
+  answers.push({
+    concept: currentConcept.topic,
+    conceptId: CONCEPTS[assignment.conceptOrder[conceptIndex]].id,
+    transfer,
+    recall,
+    stimulusMs: Math.round(performance.now() - stimulusShownAt)
+  });
+  conceptIndex++;
+  if (conceptIndex < 2) beginConcept(); else finish();
+};
+
+function finish() {
+  const row = {
+    participantId,
+    arm: assignment.arm,
+    assignmentCode: assignment.code,
+    conceptOrder: assignment.conceptOrder.map(i => CONCEPTS[i].id).join("|"),
+    startedAt,
+    completedAt: new Date().toISOString(),
+    answers
+  };
+  const rows = JSON.parse(localStorage.getItem("chalk-study-results") || "[]");
+  rows.push(row);
+  localStorage.setItem("chalk-study-results", JSON.stringify(rows));
+  localStorage.setItem("chalk-study-last", JSON.stringify(row));
+  document.getElementById("study").classList.add("hidden");
+  document.getElementById("done").classList.remove("hidden");
+}
+
+function csvEscape(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }
+function csvRows(rows) {
+  const out = [["participant_id","arm","assignment_code","concept_order","concept_id","concept","transfer_1","transfer_2","recall_1","stimulus_ms","started_at","completed_at"]];
+  for (const r of rows) for (const a of r.answers) out.push([
+    r.participantId, r.arm, r.assignmentCode, r.conceptOrder, a.conceptId, a.concept,
+    a.transfer[0] || "", a.transfer[1] || "", a.recall[0] || "", a.stimulusMs, r.startedAt, r.completedAt
+  ]);
+  return out.map(row => row.map(csvEscape).join(",")).join("\n");
+}
+function download(text, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], {type:"text/csv"}));
+  a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+document.getElementById("download-btn").onclick = () => {
+  const row = JSON.parse(localStorage.getItem("chalk-study-last"));
+  download(csvRows([row]), `chalk-${participantId}.csv`);
+};
+
+document.addEventListener("keydown", e => {
+  if (e.altKey && e.shiftKey && e.key.toLowerCase() === "o") document.getElementById("operator").classList.toggle("hidden");
+});
+document.getElementById("export-btn").onclick = () => {
+  const rows = JSON.parse(localStorage.getItem("chalk-study-results") || "[]");
+  if (!rows.length) { alert("no responses in this browser"); return; }
+  download(csvRows(rows), "chalk-study-results.csv");
+};
+</script>
+</body>
+</html>

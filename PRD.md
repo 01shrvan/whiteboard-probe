@@ -29,19 +29,47 @@ be "captions beat prose".
 | B | static, complete | the same step narrations, shown all at once |
 | C | stepped reveal | same narrations, synchronised to each step |
 
-Same content in all three. Same conceptual test afterwards, written before the
-arms are built so it cannot be tuned to flatter one.
+Same content in all three. Same test afterwards, written before the arms are built
+so it cannot be tuned to flatter one.
+
+### What gets measured
+
+**Transfer questions, not recall.** "What happens if the second message is removed"
+tests a mental model. "What did you see in step three" tests memory of an
+animation, which arm C would win for reasons that have nothing to do with
+understanding. Recall answers are collected but are not the outcome.
+
+This also blunts the **novelty confound** — arm C is inherently more engaging, and
+some of any advantage will be attention rather than comprehension. A transfer
+question is harder to answer from attention alone. It does not eliminate the
+confound; nothing cheap does. It is named here so the result is not read as
+cleaner than it is.
+
+### The decision rule, fixed in advance
+
+Written before any data exists, because the mixed result is where rationalisation
+lives.
 
 | Result | Meaning | Action |
 | --- | --- | --- |
-| C > B | Construction is doing real work | Build Chalk |
-| C = B | The narration was doing the work | The animation is decoration — rethink |
-| C = A | Neither helped | Stop |
+| C beats B on **both** concepts | Construction is doing real work | Build v1 |
+| Mixed — C wins one, ties the other | Inconclusive | **One** further pair of concepts, then decide. No third extension. |
+| C ties B on both | The narration was doing the work | The step layer is decoration. Do not build. |
+| Neither B nor C beats A | Nothing helped | Stop. |
 
-**C = B is the outcome that kills this**, and a two-arm test cannot see it.
+The single-extension cap is the important line. "Run more concepts" is otherwise
+an unbounded escape hatch that terminates exactly when the desired answer appears.
 
-Twenty people, three arms, two concepts. Days, not weeks. Everything below is
-contingent on it.
+### What the result can and cannot say
+
+Twenty people across three arms is **six or seven per condition**. That is a
+directional signal, not a population effect.
+
+A pass therefore licences: *promising enough to justify building v1.*
+It does not licence: *construction improves learning.* The second claim needs an
+order of magnitude more people, and this document should never make it.
+
+Days, not weeks. Everything below is contingent on it.
 
 ## 1. Context
 
@@ -269,8 +297,13 @@ Ranked by what they actually prove, because they are not equal.
   narration matches the visual change, final state coherent. Not to gate every
   generation forever, but because labelled failures are the only way to learn what
   the model is bad at.
-- **R4 — Refusal rate.** Too strict feels broken, too loose draws nonsense. Needs
-  tuning against real questions and is the first metric to watch.
+- **R4 — Classification quality.** A two-sided error, not a refusal rate. Drawing
+  something unstructured and refusing something drawable damage trust equally, and
+  "how does OAuth work" answered in prose is as broken as a flowchart about
+  carbonara. Tracked as a full confusion matrix over the golden set — false
+  positives, false negatives, and appropriate-form accuracy when a diagram *is*
+  warranted but the wrong form is chosen. First dashboard metric once the golden
+  set exists.
 - **R5 — Retention.** Unproven, as before. Search arrival and share are the
   acquisition hypothesis. There is no return mechanism yet, and inventing one on
   paper would repeat the last mistake.
@@ -310,7 +343,11 @@ section 0.
 **Chalk is probably a feature, not a company** — and that is the stated position
 rather than a buried risk. A chatbot can add "show me visually" and generate a
 sequence. What it cannot trivially copy is a system that knows when *not* to draw,
-and a construction order built to teach rather than to render.
+and a construction order designed around the hypothesis that sequence can teach
+rather than merely render.
+
+That hypothesis is unproven. Section 0 exists to prove or kill it, and until it
+returns, this paragraph is a bet and not a claim.
 
 That may not be a business. It is a good product, and a very good thing to have
 built. Given the alternative was six weeks of verification machinery that its own

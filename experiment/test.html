@@ -26,11 +26,9 @@
   .progress { font-size: 14px; color: #666; margin-bottom: 12px; }
   .study-board { margin: 20px 0; }
   .study-board .board__scroll { max-height: 620px; overflow: auto; }
-  .study-board .transport { display: none; }
   .all-text p { line-height: 1.55; }
   .prose { line-height: 1.65; max-width: 760px; }
   .consent { color: #555; font-size: 14px; line-height: 1.5; }
-  .notice { padding: 12px 14px; background: #f4f4f4; border-radius: 8px; margin: 14px 0; }
   .error { color: #a00; margin-top: 10px; }
 </style>
 </head>
@@ -43,9 +41,9 @@
     <h2>before you start</h2>
     <p>you will be shown two short explanations of technical concepts. afterwards you will answer questions about what would happen in a changed situation.</p>
     <p>please do the explanations in order and do not look up the answers. the study is comparing explanation formats, not your existing technical knowledge.</p>
-    <p class="consent">your participant id and responses are recorded in this browser so the study can export them later. no name or email is requested.</p>
-    <label for="pid">participant id</label>
-    <input id="pid" type="text" autocomplete="off" placeholder="e.g. p01">
+    <p class="consent">use the study code given to you by the study operator. no name or email is requested.</p>
+    <label for="pid">study code</label>
+    <input id="pid" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 01">
     <p id="start-error" class="error hidden"></p>
     <button id="start-btn" class="primary" style="margin-top:14px">begin</button>
   </section>
@@ -74,7 +72,6 @@
 <script src="../node_modules/roughjs/bundled/rough.js"></script>
 <script src="../lib/layout.js"></script>
 <script src="../lib/render.js"></script>
-<script src="../lib/player.js"></script>
 <script>
 const CONCEPTS = [
   { id: "concept-1", file: "../topics/tcp-handshake.json" },
@@ -89,22 +86,15 @@ let startedAt = null;
 let stimulusShownAt = null;
 let answers = [];
 
-function hash(s) {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function makeAssignment(id) {
-  const h = hash(id.toLowerCase());
+// fixed balanced schedule for codes 01–20: 7 a, 7 b, 6 c.
+// concept order is also counterbalanced: odd codes see concept 1 first.
+function makeAssignment(code) {
+  const n = Number(code);
   const arms = ["A", "B", "C"];
   return {
-    arm: arms[h % 3],
-    conceptOrder: (h % 2 === 0) ? [0, 1] : [1, 0],
-    code: h.toString(16)
+    arm: arms[(n - 1) % 3],
+    conceptOrder: (n % 2 === 1) ? [0, 1] : [1, 0],
+    code: String(n).padStart(2, "0")
   };
 }
 
@@ -116,19 +106,14 @@ function proseFor(spec) {
   return spec.steps.map(s => s.say).join(" ");
 }
 
-function renderStatic(spec, stepped) {
+function renderStatic(spec) {
   const host = document.createElement("div");
   host.className = "study-board";
   host.innerHTML = '<div class="board"><div class="board__scroll"><canvas></canvas></div></div>';
   const canvas = host.querySelector("canvas");
   const plan = layout(spec);
   const visible = new Set(plan.items.filter(i => i.kind === "column-title").map(i => i.id));
-  if (stepped) {
-    // only the first state is rendered initially; participants advance with the fixed step button
-    (spec.steps[0].add || []).forEach(id => visible.add(id));
-  } else {
-    for (const step of spec.steps) (step.add || []).forEach(id => visible.add(id));
-  }
+  for (const step of spec.steps) (step.add || []).forEach(id => visible.add(id));
   render(canvas, plan, visible, new Set());
   return host;
 }
@@ -143,7 +128,7 @@ function renderArm(spec) {
   if (assignment.arm === "B") {
     host.innerHTML = '<h2>' + spec.topic + '</h2><div class="all-text"></div>';
     host.querySelector(".all-text").innerHTML = spec.steps.map((s, i) => `<p><strong>step ${i + 1}</strong> — ${escapeHtml(s.say)}</p>`).join("");
-    host.prepend(renderStatic(spec, false));
+    host.prepend(renderStatic(spec));
     return host;
   }
   host.innerHTML = '<h2>' + spec.topic + '</h2>';
@@ -210,8 +195,8 @@ function beginConcept() {
 
 document.getElementById("start-btn").onclick = async () => {
   const id = document.getElementById("pid").value.trim();
-  if (!id) {
-    const e = document.getElementById("start-error"); e.textContent = "enter a participant id"; e.classList.remove("hidden"); return;
+  if (!/^([0-1][0-9]|20)$/.test(id)) {
+    const e = document.getElementById("start-error"); e.textContent = "enter the study code given to you, from 01 to 20"; e.classList.remove("hidden"); return;
   }
   participantId = id;
   assignment = makeAssignment(id);

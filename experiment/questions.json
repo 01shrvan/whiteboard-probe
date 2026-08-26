@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "status": "pre-registered",
+  "concepts": [
+    {
+      "id": "concept-1",
+      "topic": "tcp-three-way-handshake",
+      "transfer": [
+        "A TCP client sends SYN, the server replies SYN-ACK, and the client sends ACK. Suppose the server's SYN-ACK never reaches the client. What can the client conclude, and what must happen before the connection can be established?",
+        "If the client has sent its final ACK but the server has not received it, why can the connection still recover rather than simply failing permanently?"
+      ],
+      "recall": [
+        "What are the three messages in the TCP handshake, in order?"
+      ]
+    },
+    {
+      "id": "concept-2",
+      "topic": "git-rebase-vs-merge",
+      "transfer": [
+        "A branch contains commits A-B and the main branch has moved to A-C. You rebase the branch onto main. What happens to the branch's existing commits, and why are their identities different afterwards?",
+        "If two developers independently made commits from the same old base, what does choosing rebase instead of merge change about the resulting history?"
+      ],
+      "recall": [
+        "What is the basic difference between git rebase and git merge?"
+      ]
+    }
+  ]
+}

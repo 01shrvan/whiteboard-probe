@@ -2,6 +2,47 @@
 
 *Working name. Status: draft for decision. Evidence in this repo.*
 
+## 0. Step zero — the experiment that gates everything
+
+**The central claim of this document is unproven, and it is the same kind of
+unearned claim this series has killed twice.**
+
+The claim is *build order teaches*. The evidence is five examples that look
+pedagogically meaningful — written by the same model whose output is being
+judged, and found convincing by the person who wrote them. That is not evidence.
+It is exactly the error the Grasp review caught as "library equals retention",
+committed again in a new costume.
+
+**So it gets tested before anything is built.**
+
+### The design, three arms not two
+
+A two-arm test — static diagram plus prose against stepped diagram plus narration
+— varies two things at once. If the stepped arm wins, you cannot tell whether
+construction helped or whether short per-step captions are simply better writing
+than a paragraph. You would conclude "construction teaches" when the finding might
+be "captions beat prose".
+
+| Arm | Diagram | Text |
+| --- | --- | --- |
+| A | static, complete | prose explanation |
+| B | static, complete | the same step narrations, shown all at once |
+| C | stepped reveal | same narrations, synchronised to each step |
+
+Same content in all three. Same conceptual test afterwards, written before the
+arms are built so it cannot be tuned to flatter one.
+
+| Result | Meaning | Action |
+| --- | --- | --- |
+| C > B | Construction is doing real work | Build Chalk |
+| C = B | The narration was doing the work | The animation is decoration — rethink |
+| C = A | Neither helped | Stop |
+
+**C = B is the outcome that kills this**, and a two-arm test cannot see it.
+
+Twenty people, three arms, two concepts. Days, not weeks. Everything below is
+contingent on it.
+
 ## 1. Context
 
 This is the third idea in a sequence, and the first with evidence behind it.
@@ -35,13 +76,16 @@ Three findings that matter:
 
 1. **The model picked four different forms.** It did not default to
    flowchart-for-everything, which was the expected failure.
-2. **Build order teaches.** Each topic ends on a step that changes what you
-   thought — why TCP's third message is not a formality, why OAuth has a code step
-   at all, that rebase copies commits rather than moving them.
+2. **Build order *appears* to teach.** Each topic ends on a step that changes
+   what you thought — why TCP's third message is not a formality, why OAuth has a
+   code step at all, that rebase copies commits rather than moving them. Whether
+   a reader actually understands more because of the sequence is untested, and is
+   the subject of section 0.
 3. **One bug in five, and it was mine, not the model's** — comparison column titles
-   were laid out but never revealed. A layout bug, found in seconds, fixed in two
-   lines. Contrast with Grasp, where the defects were judgement and therefore
-   unfixable.
+   were laid out but never revealed. Found in seconds, fixed in two lines.
+   *Do not over-read this.* n=5 says deterministic layout makes some failures
+   easier to debug. It does not establish that layout defects are generally easier
+   than semantic ones, which is a much larger claim.
 
 ## 2. What it is
 
@@ -80,6 +124,12 @@ of three weeks of gates.
 **A refusal is a feature and must be demoable.** If Chalk cannot be shown declining
 a question, the classification is decorative.
 
+**The headline metric is appropriate-form accuracy, not refusal rate.** A wrong
+refusal is as damaging as a wrong diagram — "how does OAuth work" answered in prose
+is a broken product. Measuring only refusals metrics one direction of a two-sided
+error. Classification, not generation, is where this product will feel intelligent
+or stupid.
+
 ## 4. Forms are a closed set
 
 The model picks from a fixed vocabulary. **It cannot invent a form**, because every
@@ -95,9 +145,11 @@ form is a layout engine somebody has to write.
 | timeline | ordered events with duration | later |
 | tree | hierarchies, recursion, parsing | later |
 
-**v1 ships three forms and declines the rest.** Those three cover protocols,
-systems and comparisons — most of what technical people actually ask about. Seven
-mediocre layout engines is worse than three good ones.
+**v1 ships three forms and declines the rest.** Not because three provably cover
+most questions — nothing here establishes that, and the golden set exists to find
+out. Three is the smallest surface that can test the thesis without turning the
+project into a layout-engine factory. Seven mediocre engines is worse than three
+good ones.
 
 ## 5. Architecture
 
@@ -135,8 +187,13 @@ single-digit seconds, with narration streaming while layout computes.
 validation, stepped playback with scrub, hand-drawn rendering, permanent shareable
 URL per answer.
 
-**Out of v1:** accounts, history, diagram editing, export, the other four forms,
-collaboration, embedding. If the core loop is not good, none of them matter.
+**Out of v1:** accounts, history, export, the other four forms, collaboration,
+embedding. If the core loop is not good, none of them matter.
+
+**Permanently out, at any version: custom drawing tools.** The moment a user can
+drag a node, Chalk is a worse Excalidraw. The product draws the explanation *for*
+you; it is not a canvas you operate. Expect this request constantly and refuse it
+every time — it is the single most plausible way this becomes a generic whiteboard.
 
 ## 7. Distribution
 
@@ -144,8 +201,13 @@ Same channel as the last plan and a better fit here: **every answer gets a
 permanent URL.** `/c/tcp-three-way-handshake` is a page that can rank for a query
 with real volume, where the incumbent results are static prose with one diagram.
 
-Server-rendered with the diagram's final state as a static fallback, so it is
-crawlable and useful without JavaScript.
+**The static fallback must be genuinely useful on its own**, not a screenshot with
+a "load the interactive version" button. Against Wikipedia, Cloudflare, MDN,
+GeeksforGeeks and Stack Overflow, a page whose only content is an image ranks
+nowhere. Server-rendered, it carries: the question as a title, a short prose
+answer, every step narration as readable text, the diagram in its final state, and
+the closing takeaway. The stepped reveal is then an *enhancement* on a page that
+already stands up — which is also what makes it accessible.
 
 Secondary: the share button. A stepped explanation is more shareable than a
 paragraph, and technical communities argue about exactly these concepts.
@@ -168,13 +230,25 @@ never gets built — it is the part with no demo appeal and all of the integrity
 
 v1 is finished when all five can be demonstrated live:
 
-1. Ask a protocol question, get a sequence diagram that builds.
-2. Ask a comparison question, get two things side by side.
-3. **Ask a non-structural question and watch it decline** — clearly, with no junk
-   diagram.
-4. Show a malformed generation caught by the schema, retried, then fixed or
-   honestly declined.
-5. Share a URL that opens the same answer for someone else.
+Ranked by what they actually prove, because they are not equal.
+
+**Thesis-level — these decide whether Chalk is worth existing:**
+
+1. **Construction beats narration alone** — arm C outperforms arm B in section 0.
+2. **Ask a non-structural question and watch it decline**, clearly, with no junk
+   diagram. And ask a structural one and watch it *not* wrongly decline.
+
+**Product-level:**
+
+3. Ask a protocol question, get a sequence diagram that builds.
+4. Ask a comparison question, get two things side by side, correctly labelled.
+5. Share a URL that opens the same answer for someone else, and reads correctly
+   with JavaScript disabled.
+
+**Engineering hygiene — necessary, but proves nothing about the idea:**
+
+6. A malformed generation is caught by the schema, retried, then fixed or honestly
+   declined.
 
 ## 10. Risks
 
@@ -187,7 +261,14 @@ v1 is finished when all five can be demonstrated live:
   likely thing to eat the schedule.
 - **R3 — Quality at breadth.** Five hand-picked topics says nothing about arbitrary
   questions. *Mitigation:* a golden set of fifty questions across the three forms
-  plus a refusal slice, run on every prompt change.
+  plus a refusal slice, run on every prompt change. **Schema validity is not
+  quality** — a response can have valid nodes, valid edges and no dangling
+  references while asserting a wrong causal relationship, ordering steps
+  confusingly, or emphasising the wrong thing. So each golden answer carries human
+  labels: form appropriate, ordering meaningful, no misleading relationship,
+  narration matches the visual change, final state coherent. Not to gate every
+  generation forever, but because labelled failures are the only way to learn what
+  the model is bad at.
 - **R4 — Refusal rate.** Too strict feels broken, too loose draws nonsense. Needs
   tuning against real questions and is the first metric to watch.
 - **R5 — Retention.** Unproven, as before. Search arrival and share are the
@@ -206,11 +287,37 @@ v1 is finished when all five can be demonstrated live:
 4. Are answers public by default? Public compounds and is indexable, which is the
    whole distribution plan — but people will paste private architecture into the box.
 
-## 12. The honest summary
+## 12. The four invariants
 
-The engineering risk is low: no sandboxing, no code execution, deterministic
-layout, and a probe that already works. **The product risk is the crowd.**
+Compromise on any of these and Chalk becomes the thing it exists to avoid.
 
-Worth building if the build-order thesis is genuinely the wedge. Not worth building
-as another way to get a diagram out of a prompt — that already exists, several
-times over, from better-funded teams.
+1. **The model never controls geometry.** Structure only. No x, y, width, height
+   or path data in the schema, ever.
+2. **Classification happens before generation.** No question reaches the renderer
+   without first being judged drawable.
+3. **Construction is the explanation**, not an animated final diagram. If the
+   whole thing could be revealed at once with no loss, the step layer is decoration.
+4. **Narration and visual change are synchronised.** When the text says the client
+   sends the code, the code arrow appears on *that* step. Otherwise these are
+   slides with a transition.
+
+## 13. The honest summary
+
+Engineering risk is low: no sandboxing, no code execution, deterministic layout, a
+probe that already works. **The product risk is the crowd**, and the thesis risk is
+section 0.
+
+**Chalk is probably a feature, not a company** — and that is the stated position
+rather than a buried risk. A chatbot can add "show me visually" and generate a
+sequence. What it cannot trivially copy is a system that knows when *not* to draw,
+and a construction order built to teach rather than to render.
+
+That may not be a business. It is a good product, and a very good thing to have
+built. Given the alternative was six weeks of verification machinery that its own
+probe showed would never fire, that is the right trade.
+
+One correction to the comparison with Grasp: Grasp scored higher on defensibility
+because of its verification infrastructure. That infrastructure was measured, in
+this repo, firing **zero times across six widgets**. A moat around a gate that
+never triggers is not a moat. Chalk's low defensibility score is honest; Grasp's
+higher one never was.
